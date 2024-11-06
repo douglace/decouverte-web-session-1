@@ -63,7 +63,7 @@ switch ($method) {
  * @param string $message
  * @return void
  */
-function apiResponse(bool $status = true, mixed $data = null, string $message = "")
+function apiResponse(bool $status = true, $data = null, string $message = "")
 {
     die(json_encode([
         "status" => $status,
