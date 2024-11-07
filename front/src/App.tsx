@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -8,45 +8,123 @@ import { Pen, Trash2, Plus } from 'lucide-react'
 
 interface Todo {
   id: number
-  text: string
-  completed: boolean
+  label: string
+  status: boolean
 }
 
+const API_URL = 'http://localhost/api.php'
+
 function App() {
-  const [todos, setTodos] = useState<Todo[]>([
-    { id: 1, text: 'Task 1', completed: false },
-    { id: 2, text: 'Task 2', completed: true },
-    { id: 3, text: 'Task 3', completed: false }
-  ])
+  const [todos, setTodos] = useState<Todo[]>([])
   const [newTask, setNewTask] = useState('')
   const [editingId, setEditingId] = useState<number | null>(null)
 
-  const completedCount = todos.filter(todo => todo.completed).length
-  const totalCount = todos.length
+  useEffect(() => {
+    fetchTodos()
+  }, [])
 
-  const handleAddTodo = () => {
-    if (newTask.trim()) {
-      setTodos([...todos, { id: Date.now(), text: newTask, completed: false }])
-      setNewTask('')
+  const fetchTodos = async () => {
+    try {
+      const response = await fetch(API_URL)
+      const data = await response.json()
+      if (data.status) {
+        setTodos(data.data)
+      } else {
+        console.error('Erreur lors de la récupération des tâches:', data.message)
+      }
+    } catch (error) {
+      console.error('Erreur lors de la récupération des tâches:', error)
     }
   }
 
-  const handleToggle = (id: number) => {
-    setTodos(todos.map(todo => 
-      todo.id === id ? { ...todo, completed: !todo.completed } : todo
-    ))
+  const handleAddTodo = async () => {
+    if (newTask.trim()) {
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ label: newTask }),
+        })
+        const data = await response.json()
+        if (data.status) {
+          setNewTask('')
+          fetchTodos() // Recharger la liste après l'ajout
+        } else {
+          console.error('Erreur lors de l\'ajout de la tâche:', data.message)
+        }
+      } catch (error) {
+        console.error('Erreur lors de l\'ajout de la tâche:', error)
+      }
+    }
   }
 
-  const handleEdit = (id: number, newText: string) => {
-    setTodos(todos.map(todo => 
-      todo.id === id ? { ...todo, text: newText } : todo
-    ))
-    setEditingId(null)
+  const handleToggle = async (id: number, currentStatus: boolean) => {
+    try {
+      const todo = todos.find(t => t.id === id)
+      if (!todo) return
+
+      const response = await fetch(`${API_URL}?id=${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ label: todo.label, status: !currentStatus }),
+      })
+      const data = await response.json()
+      if (data.status) {
+        fetchTodos() // Recharger la liste après la mise à jour
+      } else {
+        console.error('Erreur lors de la mise à jour de la tâche:', data.message)
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour de la tâche:', error)
+    }
   }
 
-  const handleDelete = (id: number) => {
-    setTodos(todos.filter(todo => todo.id !== id))
+  const handleEdit = async (id: number, newText: string) => {
+    try {
+      const todo = todos.find(t => t.id === id)
+      if (!todo) return
+
+      const response = await fetch(`${API_URL}?id=${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ label: newText, status: todo.status }),
+      })
+      const data = await response.json()
+      if (data.status) {
+        setEditingId(null)
+        fetchTodos() // Recharger la liste après la mise à jour
+      } else {
+        console.error('Erreur lors de la mise à jour de la tâche:', data.message)
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour de la tâche:', error)
+    }
   }
+
+  const handleDelete = async (id: number) => {
+    try {
+      const response = await fetch(`${API_URL}?id=${id}`, {
+        method: 'DELETE',
+      })
+      const data = await response.json()
+      if (data.status) {
+        fetchTodos() // Recharger la liste après la suppression
+      } else {
+        console.error('Erreur lors de la suppression de la tâche:', data.message)
+      }
+    } catch (error) {
+      console.error('Erreur lors de la suppression de la tâche:', error)
+    }
+  }
+
+  const completedCount = todos.filter(todo => todo.status).length
+  const totalCount = todos.length
 
   return (
     <div className="min-h-screen w-screen bg-neutral-900 flex items-center justify-center p-4">
@@ -92,15 +170,15 @@ function App() {
             >
               <div className="flex items-center gap-3">
                 <button
-                  onClick={() => handleToggle(todo.id)}
+                  onClick={() => handleToggle(todo.id, todo.status)}
                   className={`h-5 w-5 rounded-full border ${
-                    todo.completed ? 'bg-green-500 border-green-500' : 'border-orange-500'
+                    todo.status ? 'bg-green-500 border-green-500' : 'border-orange-500'
                   }`}
                 />
                 {editingId === todo.id ? (
                   <Input
                     autoFocus
-                    defaultValue={todo.text}
+                    defaultValue={todo.label}
                     onBlur={(e) => handleEdit(todo.id, e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
@@ -110,8 +188,8 @@ function App() {
                     className="bg-neutral-700 border-none text-white"
                   />
                 ) : (
-                  <span className={`text-white ${todo.completed ? 'line-through text-neutral-500' : ''}`}>
-                    {todo.text}
+                  <span className={`text-white ${todo.status ? 'line-through text-neutral-500' : ''}`}>
+                    {todo.label}
                   </span>
                 )}
               </div>
