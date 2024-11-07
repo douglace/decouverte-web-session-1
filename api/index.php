@@ -15,7 +15,9 @@ try {
  
     $pdo->exec($query);
 
+    header("Access-Control-Allow-Origin: *");
     header('Content-Type: application/json');
+
     $method = $_SERVER['REQUEST_METHOD'];
     $input = json_decode(file_get_contents('php://input'), true);
 
@@ -135,8 +137,8 @@ function createTodo(PDO $pdo, string $label)
  */
 function updateTodo(PDO $pdo, int $id, string $label, bool $status)
 {
-    $stmt = $pdo->prepare("UPDATE todos SET label = ?, status = ?, updated_at = NOW() WHERE id = ?");
-    if ($stmt->execute([$label, $status, $id])) {
+    $stmt = $pdo->prepare("UPDATE todos SET label = ?, status = ?, updated_at = ? WHERE id = ?");
+    if ($stmt->execute([$label, $status, date('Y-m-d H:i:s'), $id])) {
         apiResponse(true, null, "Tâche mise à jour");
     } else {
         apiResponse(false, null, "Erreur lors de la mise à jour de la tâche");
