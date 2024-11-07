@@ -15,8 +15,23 @@ try {
  
     $pdo->exec($query);
 
-    header("Access-Control-Allow-Origin: *");
-    header('Content-Type: application/json');
+    // Autoriser toutes les origines
+    header('Access-Control-Allow-Origin: *');
+
+    // Autoriser les credentials
+    header('Access-Control-Allow-Credentials: true');
+
+    // Autoriser les méthodes de requêtes
+    header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+
+    // Autoriser les headers de requêtes
+    header('Access-Control-Allow-Headers: Origin, Content-Type, Accept, Authorization, X-Requested-With');
+
+    // Prise en compte des requêtes pré-envoyées pour vérifier la connexion (méthode OPTIONS)
+    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+        // Renvoyer uniquement les headers sans contenu, car c'est une requête de pré-vérification
+        exit(0);
+    }
 
     $method = $_SERVER['REQUEST_METHOD'];
     $input = json_decode(file_get_contents('php://input'), true);
