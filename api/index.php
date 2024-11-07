@@ -1,58 +1,65 @@
 <?php
 //Database configurations
-$host = 'localhost';
-$db = 'todos_db';
-$user = 'root';
-$pass = 'root';
+$db = './todos.db';
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8", $user, $pass);
+    $pdo = new PDO("sqlite:$db");
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    $query = "CREATE TABLE IF NOT EXISTS todos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    label TEXT NOT NULL,
+    status INTEGER DEFAULT 0,  -- 0 = incomplete, 1 = complete
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );";
+ 
+    $pdo->exec($query);
+
+    header('Content-Type: application/json');
+    $method = $_SERVER['REQUEST_METHOD'];
+    $input = json_decode(file_get_contents('php://input'), true);
+
+    switch ($method) {
+        case 'GET':
+            if (isset($_GET['id'])) {
+                getTodoById($pdo, (int) $_GET['id']);
+            } else {
+                getAllTodos($pdo);
+            }
+            break;
+
+        case 'POST':
+            if (isset($input['label'])) {
+                createTodo($pdo, $input['label']);
+            } else {
+                apiResponse(false, null, "Le champ 'label' est requis.");
+            }
+            break;
+
+        case 'PUT':
+            if (isset($_GET['id']) && isset($input['label']) && isset($input['status'])) {
+                updateTodo($pdo, (int) $_GET['id'], $input['label'], (bool) $input['status']);
+            } else {
+                apiResponse(false, null, "Les champs 'id', 'label' et 'status' sont requis.");
+            }
+            break;
+
+        case 'DELETE':
+            if (isset($_GET['id'])) {
+                deleteTodo($pdo, (int) $_GET['id']);
+            } else {
+                apiResponse(false, null, "Le champ 'id' est requis pour supprimer.");
+            }
+            break;
+
+        default:
+            apiResponse(false, null, "Méthode non supportée");
+            break;
+    }
 } catch (PDOException $e) {
-    apiResponse(false, null, "Erreur de connexion : " . $e->getMessage());
+    apiResponse(false, null, "Server errors : " . $e->getMessage());
 }
 //End
-
-header('Content-Type: application/json');
-$method = $_SERVER['REQUEST_METHOD'];
-$input = json_decode(file_get_contents('php://input'), true);
-
-switch ($method) {
-    case 'GET':
-        if (isset($_GET['id'])) {
-            getTodoById($pdo, (int) $_GET['id']);
-        } else {
-            getAllTodos($pdo);
-        }
-        break;
-
-    case 'POST':
-        if (isset($input['label'])) {
-            createTodo($pdo, $input['label']);
-        } else {
-            apiResponse(false, null, "Le champ 'label' est requis.");
-        }
-        break;
-
-    case 'PUT':
-        if (isset($_GET['id']) && isset($input['label']) && isset($input['status'])) {
-            updateTodo($pdo, (int) $_GET['id'], $input['label'], (bool) $input['status']);
-        } else {
-            apiResponse(false, null, "Les champs 'id', 'label' et 'status' sont requis.");
-        }
-        break;
-
-    case 'DELETE':
-        if (isset($_GET['id'])) {
-            deleteTodo($pdo, (int) $_GET['id']);
-        } else {
-            apiResponse(false, null, "Le champ 'id' est requis pour supprimer.");
-        }
-        break;
-
-    default:
-        apiResponse(false, null, "Méthode non supportée");
-        break;
-}
 
 //Functions helpers
 /**
