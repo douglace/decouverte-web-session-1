@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyTodo App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>MY<span>TODO</span></h1>
+        </header>
+
+        <div class="status-bar">
+            <div class="status-text">
+                <h2>Todo Done</h2>
+                <p>keep it up</p>
+            </div>
+            <div class="status-count">1/3</div>
+        </div>
+
+        <div class="task-input">
+            <input type="text" placeholder="write your next task">
+            <button class="add-btn">+</button>
+        </div>
+
+        <div class="tasks-list">
+            <div class="task-item">
+                <div class="task-content">
+                    <input type="checkbox" id="task1">
+                    <label for="task1">Task 1</label>
+                </div>
+                <div class="task-actions">
+                    <button class="edit-btn"><i class="fas fa-pen"></i></button>
+                    <button class="delete-btn"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+
+            <div class="task-item completed">
+                <div class="task-content">
+                    <input type="checkbox" id="task2" checked>
+                    <label for="task2">Task 2</label>
+                </div>
+                <div class="task-actions">
+                    <button class="edit-btn"><i class="fas fa-pen"></i></button>
+                    <button class="delete-btn"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+
+            <div class="task-item">
+                <div class="task-content">
+                    <input type="checkbox" id="task3">
+                    <label for="task3">Task 3</label>
+                </div>
+                <div class="task-actions">
+                    <button class="edit-btn"><i class="fas fa-pen"></i></button>
+                    <button class="delete-btn"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>
