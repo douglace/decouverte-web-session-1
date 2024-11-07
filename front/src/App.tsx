@@ -12,7 +12,7 @@ interface Todo {
   status: boolean
 }
 
-const API_URL = 'http://localhost/api.php'
+const API_URL = 'http://localhost:8000'
 
 function App() {
   const [todos, setTodos] = useState<Todo[]>([])
